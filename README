@@ -1,1 +1,5 @@
 Source for a Ruby session I presented at ideeli in September of 2011.
+
+Note that if you read ruby_course.org as presented by Github's markup
+display engine you won't see the included Ruby code or even the INCLUDE
+directives in the .org file.
