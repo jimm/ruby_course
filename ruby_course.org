@@ -1,0 +1,388 @@
+#+TITLE: Ruby: From Beginner to Ninja Guru Master Rockstar
+
+* Ground Rules
+
+** Talk
+- Ask questions
+  - Try to stump me!
+- Adjust my speed or volume
+
+** Type
+- Open up =irb= or a Ruby file and try things out
+
+* Development Tools
+
+** irb, methods, public_methods, .irbrc
+- type these into irb
+  - Object.methods
+  - Kernel.methods
+  - Object.methods - Kernel.methods
+  - Kernel.class.methods
+- /etc/irbrc on Mac
+
+** rdoc and ri
+
+*** method convention in docs
+- Class#instance_method
+- Class.class_method
+- Class::CONSTANT
+
+*** try me
+- find the docs for Hash's merge method
+- find the docs for Hash's constructor (hint: it's a class method)
+- find all methods of the String class
+- what is the superclass of Class?
+
+** Use the Source (/usr/lib/ruby/1.8 or $elr/1.8)
+- /usr/lib/ruby/1.8 or /opt/ruby-enterprise-1.8.7-2011.03/lib/ruby
+  - stdlib
+  - gems
+
+* Topics
+
+** Everything is an object
+#+INCLUDE "src/number_methods.rb" src ruby
+
+** Dynamically, strongly typed
+- Dynamic :: types are not declared, and variables can hold values of any
+             type
+- Strong :: a value has a type that can not change (though variables can
+            hold different values over time)
+
+** CONST, Class (constant), local_var, @instance_var, @@class_var, $global
+
+** :symbol
+- like interned string in Java or like enum
+- only one instance
+- smaller and faster than string
+
+** symbol to proc
+   &:symbol
+#+INCLUDE: "src/symbol_to_proc.rb" src ruby
+
+** variables hold object references
+- idiom: var ||= some_value
+
+** ivars
+- ivars are private
+#+INCLUDE: "src/ivars_private.rb" src ruby
+- use attr_* to create accessors
+- don't need attr_* to have an ivar
+- accessor methods
+#+INCLUDE: "src/accessors.rb" src ruby
+
+** strings
+- 'single' vs. "double"
+  - in 'single\n' that "\n" is not a newline
+- "interpolation #{3 + 4}"            # => interpolation 7
+  - can be multiple lines of code, but not recommended
+- "formatting %.3s" % 'abcdef'        # => formatting abc
+- "formatting %s %d" % ["hello", 42]  # => formatting hello 42
+- 'x' * 5
+- printf
+- heredocs
+- %q{single-quoted} and %Q{double-quoted} (can use diff delims)
+- multi-byte i18n much, much better in Ruby 1.9
+- "42".to_i, "1.23".to_f
+- "abc".to_sym
+- billions and billions of methods
+- each (each_line) vs. each_char vs. each_byte
+- "a".succ
+- pack/unpack
+#+INCLUDE: "src/strings.rb" src ruby
+*** try me
+- what are the last four characters of your name?
+
+** characters
+- ?a is the character "a" (the number 97)
+#+INCLUDE: "src/characters.rb" src ruby
+
+** truthiness
+- =nil= and =false= are false, all else true
+- nil.class is NilClass
+  - Rails hooks NilClass in [[file:/opt/ruby-enterprise/lib/ruby/gems/1.8/gems/activesupport-3.0.7/lib/active_support/whiny_nil.rb::Extensions%20to%20nil%20which%20allow%20for%20more%20helpful%20error%20messages%20for%20people%20who][whiny_nil.rb]]
+*** try me
+- what is the class of +true+?
+
+** regular expressions
+- /foobar/ and %r{foobar}
+
+** other '%' reader macros
+#+INCLUDE: "src/reader_macros.rb" src ruby
+
+** printing
+- puts :: adds newline if needed
+- print :: does not add newline
+- p :: calls inspect
+- pp :: pretty print (require 'pp')
+- printf :: printf("format string", args...)
+
+** require vs. load
+*** require
+- only reads file once
+- infers file extension: .rb, .so, .dll, more
+*** load
+- reads file every time
+- requires file extension
+
+** case statement
+- uses ===
+#+INCLUDE: "src/case_equals.rb" src ruby
+
+** class
+- initializer, super
+  - super w/out args passes existing args up to superclass
+- name is a constant
+- a class is an object, too! it has a superclass
+#+BEGIN_SRC quote
+     /--------> Object
+     |            |
+   String       Module
+     |            |
+     \ class -> Class -- class -\
+                  ^             |
+                  \-------------/
+#+END_SRC
+#+INCLUDE: "src/class_hierarchy.rb" src ruby
+
+- @@class_var vs. @class_instance_var
+  - class vars are shared across all subclasses
+  - class instance vars are per class, just like normal instance vars
+#+INCLUDE: "src/class_instance_var.rb" src ruby
+
+** module
+
+*** namespaces
+  - nested modules / classes
+
+*** mixins
+  - include and extend
+    - include adds a module as superclass of self
+      - makes new anonymous class object whose methods include module's methods
+      - that anonymous class inherits from original superclass
+      - original class inherits from anonymous class
+    - extends adds instance methods to a particular object
+      - using extend in a class def will add methods in the module as class methods
+#+INCLUDE: "src/extend_and_include.rb" src ruby
+
+** duck typing
+- classes are not types
+- responds_to? vs. kind_of? or instance_of?
+#+INCLUDE: "src/duck_typing.rb" src ruby
+- don't use responds_to?, trust the caller
+
+** monkey patching (duck punching)
+#+INCLUDE: "src/monkey_patching.rb" src ruby
+
+** class / module methods
+#+INCLUDE: "src/class_methods.rb" src ruby
+
+** eigenclass / singleton class
+- remember, inside class def, self is the class (def self.foo)
+- that really defines method on the Foo object (Foo is an object that is
+      of type Class)
+- so:
+#+INCLUDE: "src/eigenclass.rb" src ruby
+
+** Kernel module
+- Kernel is included by Object
+- its module-level Kernel methods can be called without a receiver
+  - functional
+  - examples: exit, system, `, gets, puts, lambda, split, rand
+
+** blocks, closures
+- blocks are closures: they capture scope (variables, stack, value of self)
+#+INCLUDE: "src/block_var_capture.rb" src ruby
+- can pass blocks to methods
+#+INCLUDE: "src/block_as_method_arg.rb" src ruby
+- idiom: using blocks for auto-closing
+#+INCLUDE: "src/auto_closing_idiom.rb" src ruby
+- blocks can be objects (Proc) and can be passed around
+  - blocks vs. lambda vs. Procs : advanced, local return is different
+    - lambda turns block into Proc; almost same as Proc.new (local return)
+    - (you may see "proc" but that is deprecated)
+    - Ruby 1.9: you can now write "-> params { ... }"
+  - see also Binding and Continuation classes
+
+** reflection, metaprogramming
+- methods, public_methods, public_instance_methods
+- send
+- method_missing(symbol, *args, &block)
+  - Rails uses this to turn db column attrs into accessor methods and
+        also for methods like find_by_name_and_shoe_size
+  - don't forget to call super
+- Class#inherited, method_added, much more
+- other hooks (e.g. marshalling)
+- ObjectSpace ("ri ObjectSpace")
+  - find classes in memory, run GC
+
+** conversion
+- to_s, to_i, to_f, to_a, to_ary, to_hash
+- to_json, to_yaml
+
+*** to_s, to_i vs. to_str, to_int
+- to_s, to_i for /representation/ (e.g. puts)
+- to_str, to_int for /strict conversion/ (can this "become" or "behave as" a String?)
+  - for example, see Exception#to_str
+
+** https://github.com/bbatsov/ruby-style-guide
+
+** multiple assignment
+#+INCLUDE: "src/multiple_assignment.rb" src ruby
+
+** def
+- default args
+- calling with hash as last arg, don't need "{" and "}"
+- calling with block and using block (yield, call)
+- array args and use of * ("splat")
+#+INCLUDE: "src/splat.rb" src ruby
+
+** def implies begin (use rescue, for example, to show this)
+#+INCLUDE: "src/def_implies_begin.rb" src ruby
+
+** define_method
+
+** access control
+- before chunk of methods or separately
+#+INCLUDE: "src/access_control.rb" src ruby
+
+** Array set operations
+#+INCLUDE: "src/array_set_ops.rb" src ruby
+
+** Array and Hash initialization (blocks) -- use "ri Hash.new"
+- Arrays auto-expand
+- Hashes can use any object as index; Ruby 1.9 keys retain order
+
+** Ranges
+- try using a range to sum the values from 1 to 100
+
+** Enumerable (module; impl each) and Enumerator (an object)
+- select, reject, detect, collect/map, filter, all?, any? (see "ri Enumerable")
+  - Smalltalk names (select, reject, detect, collect)
+  - Lisp names (filter, map, any?)
+
+#+BEGIN_SRC ruby
+# Notice how many different classes access their contents
+# the same way because they all import Enumerable and
+# implement the "each" method.
+#
+array.each { | elem | puts elem }
+hash.each { | key, val | puts "#{key} => #{val}" }
+file.each { | line | puts line }
+string.each { | line | puts line }
+#+END_SRC
+
+- example of writing enumeratable object
+
+#+INCLUDE: "src/enumerable.rb" src ruby
+
+** external iterators (Enumerator; an_array.to_enum)
+
+** alias_method
+#+INCLUDE: "src/alias_method.rb" src ruby
+- used for AOP
+
+** raise / rescue / ensure / retry
+#+INCLUDE: "src/raise_rescue.rb" src ruby
+
+** tools (see below: rake, gem, etc.)
+
+** Ruby implementations
+- Ruby MRI built in C; can write C and hook in easily
+- JRuby
+- Rubinius
+- YARV (Ruby 1.9 based on YARV)
+- Gemstone's MagLev
+- see also http://www.mirah.org
+
+** instance_eval vs. class_eval
+- "self" becomes some arbitrary object
+- class_eval: method defs will define instance methods, just like inside
+      top level of class code
+- can take expression, code block, or string (string is dangerous)
+- rarely is there a need to use eval("string"); dangerous and slow
+
+** tap
+#+INCLUDE: "src/tap.rb" src ruby
+
+** shell command expansion
+#+INCLUDE: "src/command_expansion.rb" src ruby
+
+** $SAFE
+** .freeze
+
+** YAML
+
+* Standard Library
+
+** standard library review
+- /usr/local/lib/ruby
+- built ins like File, Dir
+
+** IO, File, Dir, StringIO
+
+** FileUtils
+
+** Test::Unit
+
+** Struct
+#+INCLUDE: "src/struct.rb" src ruby
+- see also OpenStruct
+#+INCLUDE: "src/open_struct.rb" src ruby
+
+* Resources
+- http://rubydoc.info/
+- http://ruby.learncodethehardway.org/book/
+- http://pragprog.com/
+- http://api.rubyonrails.org/
+
+* Ruby Scripts
+
+** there is a top-level object
+
+** hashbang
+
+** command line args
+- =-d= sets =$DEBUG= to true
+- =-r require_name=
+- -e 'command'
+- -w warnings
+- -p, -i, -a
+
+** rbenv and rvm
+
+* Tools Part Deux
+
+** irb - Interactive Ruby Browser
+   - .irbrc
+     - /etc/irbrc
+
+** erb
+   - quick sample
+
+** gem
+   - where do gems live?
+   - don't require rubygems in your script
+
+** rake
+   - write a task
+
+** rdoc
+   - :nodoc:
+   - sample?
+
+** ri
+
+** testrb - Test::Unit automatic runner
+
+* Rails
+
+** talk
+http://www.jimmenard.com/writing/rails_ctoclub/s5/index.html
+
+** columns are not attributes
+
+** why self.column in Rails (instead of just column; i.e. it is not really an ivar)
+
+** named scope (query fragment)
+- can be chained together
